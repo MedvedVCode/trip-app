@@ -31,6 +31,23 @@
 			>
 				{{ currentBro.name }} банкует
 			</p>
+			<div
+				class="spread-to-all"
+				v-if="currentBro"
+			>
+				<p>Разделить сумму на всех</p>
+				<input
+					type="number"
+					class="money__spent"
+					v-model="currentBro.spentInTime"
+				/>
+				<button
+					class="round-btn money__btn"
+					@click="spreadCashToAll(payBro)"
+				>
+					&#10004;
+				</button>
+			</div>
 			<ul class="money">
 				<li
 					class="money__users"
@@ -65,7 +82,13 @@
 				</li>
 			</ul>
 		</section>
-		<button class="clear-btn" @click="clearAll">Очистить все</button>
+		<button
+			class="clear-btn"
+			@click="clearAll"
+			v-if="maxId > 0"
+		>
+			Очистить все
+		</button>
 	</section>
 </template>
 
@@ -113,6 +136,7 @@ export default {
 			localStorage.setItem(this.LOCAL_KEY, JSON.stringify(this.trip));
 		},
 		selectUser(user) {
+			this.currentBro.spentInTime = 0;
 			this.selectedBro = user;
 			this.setTotalResult();
 		},
@@ -123,6 +147,14 @@ export default {
 			this.trip[index] = this.selectedBro;
 			this.setTotalResult();
 			localStorage.setItem(this.LOCAL_KEY, JSON.stringify(this.trip));
+		},
+		spreadCashToAll(users) {
+			const value = Math.floor(this.selectedBro.spentInTime / this.maxId);
+			this.selectedBro.spentInTime = 0;
+			users.forEach((user) => {
+				user.spentInTime = value;
+				this.setCash(user);
+			});
 		},
 		setTotalResult() {
 			const array = [];
@@ -152,11 +184,10 @@ export default {
 		clearAll() {
 			this.trip = [];
 			localStorage.setItem(this.LOCAL_KEY, JSON.stringify(this.trip));
-			this.maxId= 0,
-			this.spent= 0,
-			this.totalResult =  [],
+			this.maxId = 0;
+			this.spent = 0;
+			this.totalResult = [];
 			this.selectedBro = undefined;
-			// this.setTotalResult();
 		},
 	},
 	computed: {
@@ -221,6 +252,12 @@ export default {
 	@include jost(16px, 400, 20px, 0.16px);
 	color: $accentColor;
 }
+.spread-to-all {
+	display: flex;
+	gap: 20px;
+	margin-top: 10px;
+	align-items: center;
+}
 .money {
 	margin-top: 10px;
 	display: flex;
@@ -246,7 +283,7 @@ export default {
 		align-self: center;
 		@include jost(14px, 400, 20px, 0.16px);
 	}
-	&__btn{
+	&__btn {
 		align-self: center;
 	}
 }
@@ -273,17 +310,17 @@ export default {
 	}
 }
 
-.clear-btn{
+.clear-btn {
 	margin-top: 20px;
 	padding: 6px;
 	border-radius: 10px;
 	border: 2px solid $accentColor;
-		height: 30px;
-		background-color: #fff;
-		color: $titleTxtColor;
-		cursor: pointer;
-		&:hover{
-			color: $accentColor;
-		}
+	height: 30px;
+	background-color: #fff;
+	color: $titleTxtColor;
+	cursor: pointer;
+	&:hover {
+		color: $accentColor;
+	}
 }
 </style>
