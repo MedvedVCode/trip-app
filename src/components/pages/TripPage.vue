@@ -65,6 +65,7 @@
 				</li>
 			</ul>
 		</section>
+		<button class="clear-btn" @click="clearAll">Очистить все</button>
 	</section>
 </template>
 
@@ -147,6 +148,15 @@ export default {
 				}
 			}
 			return sum;
+		},
+		clearAll() {
+			this.trip = [];
+			localStorage.setItem(this.LOCAL_KEY, JSON.stringify(this.trip));
+			this.maxId= 0,
+			this.spent= 0,
+			this.totalResult =  [],
+			this.selectedBro = undefined;
+			// this.setTotalResult();
 		},
 	},
 	computed: {
@@ -261,5 +271,19 @@ export default {
 		background-color: $accentBGColor;
 		border-radius: 5px;
 	}
+}
+
+.clear-btn{
+	margin-top: 20px;
+	padding: 6px;
+	border-radius: 10px;
+	border: 2px solid $accentColor;
+		height: 30px;
+		background-color: #fff;
+		color: $titleTxtColor;
+		cursor: pointer;
+		&:hover{
+			color: $accentColor;
+		}
 }
 </style>
