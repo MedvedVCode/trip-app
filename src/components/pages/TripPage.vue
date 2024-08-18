@@ -73,12 +73,27 @@
 					v-for="result in resultBro"
 					:key="result"
 					class="result__item"
+					@click="showTransactions(result)"
 				>
-					<span class="result__name">{{ result.firstBro }}</span>
+					<span class="result__name">{{ result.firstBro.name }}</span>
 					<span v-if="result.total < 0"> должен </span>
 					<span v-else> получит от </span>
-					<span class="result__name">{{ result.secondBro }}</span>
+					<span class="result__name">{{ result.secondBro.name }}</span>
 					<span class="result__cash">{{ Math.abs(result.total) }}</span>
+					<ul
+						v-if="result.isShow"
+						class="result__transactions"
+					>
+						<li
+							v-for="(item, index) in result.transactionList"
+							:key="index"
+						>
+							<p>
+								{{ item.to }} перевел {{ item.from }} -> {{ item.cash }},
+								{{ item.date }}
+							</p>
+						</li>
+					</ul>
 				</li>
 			</ul>
 		</section>
@@ -126,7 +141,7 @@ export default {
 			this.maxId++;
 			const newName = {
 				id: this.maxId,
-				name: data,
+				name: data.toUpperCase(),
 				balance: [],
 				spentInTime: 0,
 			};
@@ -141,7 +156,11 @@ export default {
 			this.setTotalResult();
 		},
 		setCash(user) {
-			this.selectedBro.balance.push({ id: user.id, cash: user.spentInTime });
+			this.selectedBro.balance.push({
+				id: user.id,
+				cash: user.spentInTime,
+				date: new Date(),
+			});
 			user.spentInTime = 0;
 			const index = this.trip.indexOf((item) => item === this.selectedBro);
 			this.trip[index] = this.selectedBro;
@@ -164,8 +183,9 @@ export default {
 					resultItem.total =
 						this.getBalanceById(this.trip[i].balance, j + 1) -
 						this.getBalanceById(this.trip[j].balance, i + 1);
-					resultItem.firstBro = this.trip[i].name;
-					resultItem.secondBro = this.trip[j].name;
+					resultItem.firstBro = this.trip[i];
+					resultItem.secondBro = this.trip[j];
+					resultItem.isShow = false;
 					array.push(resultItem);
 					resultItem = {};
 				}
@@ -180,6 +200,41 @@ export default {
 				}
 			}
 			return sum;
+		},
+		showTransactions(result) {
+			result.isShow = !result.isShow;
+			let transactions = [];
+			result.firstBro.balance.forEach((item) => {
+				if (item.id === result.secondBro.id) {
+					transactions.push({
+						from: result.secondBro.name,
+						to: result.firstBro.name,
+						cash: item.cash,
+						date: item.date,
+					});
+				}
+			});
+			result.secondBro.balance.forEach((item) => {
+				if (item.id === result.firstBro.id) {
+					transactions.push({
+						from: result.firstBro.name,
+						to: result.secondBro.name,
+						cash: item.cash,
+						date: item.date,
+					});
+				}
+			});
+			transactions.sort((a, b) => {
+				console.log(a.date, b.date);
+				return new Date(a.date) - new Date(b.date);
+			});
+			result.transactionList = transactions.map((item) => {
+				let time = new Date(item.date);
+				let date = time.toLocaleDateString();
+				time = time.toLocaleTimeString();
+				item.date = `${date} - ${time}`;
+				return item;
+			});
 		},
 		clearAll() {
 			this.trip = [];
@@ -297,6 +352,11 @@ export default {
 	color: $textColor;
 	&__item {
 		margin-top: 10px;
+		padding: 5px;
+		&:hover {
+			outline: 1px solid $accentColor;
+			border-radius: 10px;
+		}
 	}
 	&__name {
 		color: $accentColor;
@@ -307,6 +367,10 @@ export default {
 		padding: 4px;
 		background-color: $accentBGColor;
 		border-radius: 5px;
+	}
+	&__transactions {
+		margin-left: 20px;
+		margin-top: 5px;
 	}
 }
 
